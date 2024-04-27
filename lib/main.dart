@@ -1,5 +1,5 @@
+import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import services to use input formatters
 
 void main() {
   runApp(MyApp());
@@ -9,7 +9,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Enhanced Travel Details Input',
+      title: 'Complete Travel Details Input',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -25,8 +25,10 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _currentCityController = TextEditingController();
-  final TextEditingController _destinationCityController = TextEditingController();
-  final TextEditingController _numberOfPeopleController = TextEditingController();
+  final TextEditingController _destinationCityController =
+      TextEditingController();
+  final TextEditingController _numberOfPeopleController =
+      TextEditingController();
   final TextEditingController _luggageController = TextEditingController();
   final TextEditingController _budgetController = TextEditingController();
 
@@ -39,6 +41,54 @@ class _MyHomePageState extends State<MyHomePage> {
   String _luggage = '';
   String _budget = '';
 
+  Future<void> chatWithGPT(String prompt) async {
+    final openAiApiKey = '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';
+
+    OpenAI.apiKey = openAiApiKey;
+    final messages = [
+      OpenAIChatCompletionChoiceMessageModel(
+        content: prompt,
+        role: OpenAIChatMessageRole.user,
+      ),
+    ];
+
+    try {
+      final chatCompletion = await OpenAI.instance.chat.create(
+        model: 'gpt-3.5-turbo',
+        messages: messages,
+        maxTokens: 500,
+        functions: [
+          OpenAIFunctionModel.withParameters(
+            name: 'generate_items_to_be_carried',
+            description:
+                'Generate items to be carried.',
+            parameters: [
+              OpenAIFunctionProperty.object(
+                name: 'Items',
+                description:
+                    'Items to be carried',
+                isRequired: true,
+                properties: [
+                  OpenAIFunctionProperty.string(
+                    name: 'Item to be carried',
+                    description: 'Item',
+                    isRequired: true,
+                  ),
+                ],
+              ),
+            ],
+          )
+        ],
+        functionCall: FunctionCall.forFunction('generate_items_to_be_carried'),
+      );
+
+      var functionResponse = chatCompletion.choices.first.message.functionCall;
+      print("Recommended items to carry: ${functionResponse}");
+    } catch (e) {
+      print("Error communicating with GPT-3.5: $e");
+    }
+  }
+
   void _submitForm() {
     setState(() {
       _currentCity = _currentCityController.text;
@@ -47,6 +97,10 @@ class _MyHomePageState extends State<MyHomePage> {
       _luggage = _luggageController.text;
       _budget = _budgetController.text;
     });
+
+    String travelDetails =
+        'Travel from $_currentCity to $_destinationCity for $_numberOfPeople people with $_luggage pieces of luggage from ${_startDate.toLocal()} to ${_endDate.toLocal()} within a budget of $_budget INR. What will be the things to carry?';
+    chatWithGPT(travelDetails);
   }
 
   Future<void> _selectStartDate(BuildContext context) async {
@@ -116,7 +170,6 @@ class _MyHomePageState extends State<MyHomePage> {
             TextField(
               controller: _numberOfPeopleController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 labelText: 'Number of People',
               ),
@@ -126,9 +179,8 @@ class _MyHomePageState extends State<MyHomePage> {
               controller: _luggageController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Luggage (kg)',
+                labelText: 'Luggage (number of items)',
               ),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
             SizedBox(height: 20),
             TextField(
@@ -137,7 +189,6 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: InputDecoration(
                 labelText: 'Budget (INR)',
               ),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
             SizedBox(height: 20),
             ElevatedButton(
@@ -148,8 +199,8 @@ class _MyHomePageState extends State<MyHomePage> {
             Text('Current City: $_currentCity'),
             Text('Destination City: $_destinationCity'),
             Text('Number of People: $_numberOfPeople'),
-            Text('Luggage: $_luggage kg'),
-            Text('Budget: $_budget INR'),
+            Text('Luggage: $_luggage'),
+            Text('Budget: $_budget'),
           ],
         ),
       ),
