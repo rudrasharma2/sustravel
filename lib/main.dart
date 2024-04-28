@@ -59,31 +59,76 @@ class _MyHomePageState extends State<MyHomePage> {
         maxTokens: 500,
         functions: [
           OpenAIFunctionModel.withParameters(
-            name: 'generate_items_to_be_carried',
-            description:
-                'Generate items to be carried.',
+            name: 'get_multiple_checkpoints',
+            description: 'Get checkpoints within the destination',
             parameters: [
               OpenAIFunctionProperty.object(
-                name: 'Items',
-                description:
-                    'Items to be carried',
+                name: 'checkpoints',
+                description: 'Checkpoints where transport needs to be changed',
                 isRequired: true,
                 properties: [
                   OpenAIFunctionProperty.string(
-                    name: 'Item to be carried',
-                    description: 'Item',
+                    name: 'Checkpoint',
+                    description: 'The checkpoint not including current city. eg. Delhi',
                     isRequired: true,
                   ),
+                  OpenAIFunctionProperty.object(
+                      name: 'multiple_low_impact_transport_options',
+                      description:
+                          'Low impact transport options to travel to checkpoints from previous',
+                      isRequired: true,
+                      properties: [
+                        OpenAIFunctionProperty.string(
+                          name: 'low_impact_transport',
+                          description:
+                              'Low impact transport to travel to checkpoint from previous eg. Train',
+                          isRequired: true,
+                        ),
+                        OpenAIFunctionProperty.string(
+                          name: 'carbon_footprint',
+                          description:
+                              'Estimated carbon footprint via transport while travelling to checkpoint from previous',
+                          isRequired: true,
+                        ),
+                        OpenAIFunctionProperty.string(
+                          name: 'estimated_price',
+                          description:
+                              'Estimated price for transport for travelling to current checkpoint from previous checkpoint',
+                          isRequired: true,
+                        ),
+                      ]),
                 ],
               ),
             ],
           )
         ],
-        functionCall: FunctionCall.forFunction('generate_items_to_be_carried'),
+        functionCall: FunctionCall.forFunction('get_multiple_checkpoints'),
       );
 
-      var functionResponse = chatCompletion.choices.first.message.functionCall;
-      print("Recommended items to carry: ${functionResponse}");
+      FunctionCallResponse? response = chatCompletion.choices.first.message.functionCall;
+      var arguments = response?.arguments;
+      var checkpoints = arguments?['checkpoints'];
+      List<Map<String, dynamic>> checkpointDetails = [];
+
+      for (var checkpoint in checkpoints) {
+        var checkpointName = checkpoint['Checkpoint'];
+        var transportOptions = checkpoint['multiple_low_impact_transport_options'];
+
+        // Preparing data for display or further processing
+        checkpointDetails.add({
+          'checkpoint': checkpointName,
+          'transport_options': transportOptions['low_impact_transport'],
+          'carbon_footprint': transportOptions['carbon_footprint'],
+          'estimated_price': transportOptions['estimated_price'],
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailsPage(checkpointDetails: checkpointDetails),
+          ),
+        );
+      }
     } catch (e) {
       print("Error communicating with GPT-3.5: $e");
     }
@@ -99,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     String travelDetails =
-        'Travel from $_currentCity to $_destinationCity for $_numberOfPeople people with $_luggage pieces of luggage from ${_startDate.toLocal()} to ${_endDate.toLocal()} within a budget of $_budget INR. What will be the things to carry?';
+        'Travel from $_currentCity to $_destinationCity for $_numberOfPeople people with $_luggage pieces of luggage from ${_startDate.toLocal()} to ${_endDate.toLocal()} within a budget of $_budget INR. Give different low impact transportation options to travel with all the city names aka checkpoints where the transport is changed along with its carbon footprints and price.';
     chatWithGPT(travelDetails);
   }
 
@@ -137,72 +182,103 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text('Enter Your Travel Details'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            TextField(
-              controller: _currentCityController,
-              decoration: InputDecoration(
-                labelText: 'Current City',
-              ),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _destinationCityController,
-              decoration: InputDecoration(
-                labelText: 'Destination City',
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _selectStartDate(context),
-              child: Text('Select Start Date'),
-            ),
-            Text('Start Date: ${_startDate.toLocal()}'.split(' ')[0]),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _selectEndDate(context),
-              child: Text('Select End Date'),
-            ),
-            Text('End Date: ${_endDate.toLocal()}'.split(' ')[0]),
-            SizedBox(height: 20),
-            TextField(
-              controller: _numberOfPeopleController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Number of People',
-              ),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _luggageController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Luggage (number of items)',
-              ),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _budgetController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Budget (INR)',
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _submitForm,
-              child: Text('Submit'),
-            ),
-            SizedBox(height: 20),
-            Text('Current City: $_currentCity'),
-            Text('Destination City: $_destinationCity'),
-            Text('Number of People: $_numberOfPeople'),
-            Text('Luggage: $_luggage'),
-            Text('Budget: $_budget'),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage("https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
+            fit: BoxFit.fill,
+          ),
         ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: <Widget>[
+              TextField(
+                controller: _currentCityController,
+                decoration: InputDecoration(
+                  labelText: 'Current City',
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _destinationCityController,
+                decoration: InputDecoration(
+                  labelText: 'Destination City',
+                ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => _selectStartDate(context),
+                child: Text('Select Start Date'),
+              ),
+              Text('Start Date: ${_startDate.toLocal()}'.split(' ')[0]),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => _selectEndDate(context),
+                child: Text('Select End Date'),
+              ),
+              Text('End Date: ${_endDate.toLocal()}'.split(' ')[0]),
+              SizedBox(height: 20),
+              TextField(
+                controller: _numberOfPeopleController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Number of People',
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _luggageController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Luggage (number of items)',
+                ),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: _budgetController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Budget (INR)',
+                ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _submitForm,
+                child: Text('Submit'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DetailsPage extends StatelessWidget {
+  final List<Map<String, dynamic>> checkpointDetails;
+
+  DetailsPage({required this.checkpointDetails});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Checkpoint Details'),
+      ),
+      body: ListView.builder(
+        itemCount: checkpointDetails.length,
+        itemBuilder: (context, index) {
+          var checkpoint = checkpointDetails[index];
+          return ListTile(
+            title: Text(checkpoint['checkpoint']),
+            subtitle: Text(
+              'Transport Options: ${checkpoint['transport_options']}, '
+              'Carbon Footprint: ${checkpoint['carbon_footprint']}, '
+              'Estimated Price: ${checkpoint['estimated_price']}'
+            ),
+          );
+        },
       ),
     );
   }
