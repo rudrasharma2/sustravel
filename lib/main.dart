@@ -13,7 +13,22 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: Scaffold(
+        extendBodyBehindAppBar: true, // Ensure body content is visible behind the app bar
+        appBar: AppBar(
+          backgroundColor: Colors.transparent, // Set app bar background color to transparent
+          elevation: 0, // Remove app bar shadow
+          flexibleSpace: Center(
+            // Center the logo horizontally and vertically
+            child: Image.network(
+              'https://i.ibb.co/yQW8sYg/Whats-App-Image-2024-04-28-at-10-28-56-29e59b73-removebg-preview.png',
+              height: 40, // Adjust the height of the logo as needed
+            ),
+          ),
+          centerTitle: true, // Center the title horizontally
+        ),
+        body: MyHomePage(),
+      ),
     );
   }
 }
