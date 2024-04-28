@@ -69,7 +69,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 properties: [
                   OpenAIFunctionProperty.string(
                     name: 'Checkpoint',
-                    description: 'The checkpoint not including current city. eg. Delhi',
+                    description:
+                        'The checkpoint not including current city. eg. Delhi',
                     isRequired: true,
                   ),
                   OpenAIFunctionProperty.object(
@@ -105,14 +106,16 @@ class _MyHomePageState extends State<MyHomePage> {
         functionCall: FunctionCall.forFunction('get_multiple_checkpoints'),
       );
 
-      FunctionCallResponse? response = chatCompletion.choices.first.message.functionCall;
+      FunctionCallResponse? response =
+          chatCompletion.choices.first.message.functionCall;
       var arguments = response?.arguments;
       var checkpoints = arguments?['checkpoints'];
       List<Map<String, dynamic>> checkpointDetails = [];
 
       for (var checkpoint in checkpoints) {
         var checkpointName = checkpoint['Checkpoint'];
-        var transportOptions = checkpoint['multiple_low_impact_transport_options'];
+        var transportOptions =
+            checkpoint['multiple_low_impact_transport_options'];
 
         // Preparing data for display or further processing
         checkpointDetails.add({
@@ -125,7 +128,8 @@ class _MyHomePageState extends State<MyHomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => DetailsPage(checkpointDetails: checkpointDetails),
+            builder: (context) =>
+                DetailsPage(checkpointDetails: checkpointDetails),
           ),
         );
       }
@@ -178,76 +182,138 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // Define a smaller width for the text fields
+    double textFieldWidth = screenWidth * 0.2; // 60% of screen width
+
+    // Define the gray color
+    Color grayColor = Color(0xFFD9D9D9); // Specific gray color
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Enter Your Travel Details'),
-      ),
       body: Container(
+        width: double.infinity,
+        height: MediaQuery.of(context).size.height,
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage("https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
-            fit: BoxFit.fill,
+            image: NetworkImage(
+                "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
+            fit: BoxFit.cover,
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: <Widget>[
-              TextField(
-                controller: _currentCityController,
-                decoration: InputDecoration(
-                  labelText: 'Current City',
-                ),
+        child: Center(
+          child: Container(
+            width: screenWidth * 0.3, // Adjust width to 80% of screen width
+            height: screenHeight * 0.8, // Adjust height to 80% of screen height
+            padding: const EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+              color:
+                  Color(0xB7D9D9D9), // Semi-transparent white for the container
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: SingleChildScrollView(
+              // Allows scrolling when content is larger than the container
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Container(
+                    width: textFieldWidth,
+                    child: TextField(
+                      controller: _currentCityController,
+                      decoration: InputDecoration(
+                        labelText: 'Current City',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        filled: true,
+                        fillColor: grayColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    width: textFieldWidth,
+                    child: TextField(
+                      controller: _destinationCityController,
+                      decoration: InputDecoration(
+                        labelText: 'Destination City',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        filled: true,
+                        fillColor: grayColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _selectStartDate(context),
+                    child: Text('Select Start Date'),
+                  ),
+                  Text('Start Date: ${_startDate.toLocal()}'.split(' ')[0]),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => _selectEndDate(context),
+                    child: Text('Select End Date'),
+                  ),
+                  Text('End Date: ${_endDate.toLocal()}'.split(' ')[0]),
+                  SizedBox(height: 20),
+                  Container(
+                    width: textFieldWidth,
+                    child: TextField(
+                      controller: _numberOfPeopleController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Number of People',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        filled: true,
+                        fillColor: grayColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    width: textFieldWidth,
+                    child: TextField(
+                      controller: _luggageController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Luggage (number of items)',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        filled: true,
+                        fillColor: grayColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Container(
+                    width: textFieldWidth,
+                    child: TextField(
+                      controller: _budgetController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Budget (INR)',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        filled: true,
+                        fillColor: grayColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _submitForm,
+                    child: Text('Submit'),
+                  ),
+                ],
               ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _destinationCityController,
-                decoration: InputDecoration(
-                  labelText: 'Destination City',
-                ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => _selectStartDate(context),
-                child: Text('Select Start Date'),
-              ),
-              Text('Start Date: ${_startDate.toLocal()}'.split(' ')[0]),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => _selectEndDate(context),
-                child: Text('Select End Date'),
-              ),
-              Text('End Date: ${_endDate.toLocal()}'.split(' ')[0]),
-              SizedBox(height: 20),
-              TextField(
-                controller: _numberOfPeopleController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Number of People',
-                ),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _luggageController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Luggage (number of items)',
-                ),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _budgetController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Budget (INR)',
-                ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: Text('Submit'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -272,11 +338,10 @@ class DetailsPage extends StatelessWidget {
           var checkpoint = checkpointDetails[index];
           return ListTile(
             title: Text(checkpoint['checkpoint']),
-            subtitle: Text(
-              'Transport Options: ${checkpoint['transport_options']}, '
-              'Carbon Footprint: ${checkpoint['carbon_footprint']}, '
-              'Estimated Price: ${checkpoint['estimated_price']}'
-            ),
+            subtitle:
+                Text('Transport Options: ${checkpoint['transport_options']}, '
+                    'Carbon Footprint: ${checkpoint['carbon_footprint']}, '
+                    'Estimated Price: ${checkpoint['estimated_price']}'),
           );
         },
       ),
