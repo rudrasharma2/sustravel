@@ -108,22 +108,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
       FunctionCallResponse? response =
           chatCompletion.choices.first.message.functionCall;
+      print(response);
       var arguments = response?.arguments;
       var checkpoints = arguments?['checkpoints'];
       List<Map<String, dynamic>> checkpointDetails = [];
 
       for (var checkpoint in checkpoints) {
         var checkpointName = checkpoint['Checkpoint'];
-        var transportOptions =
-            checkpoint['multiple_low_impact_transport_options'];
+        var transportOptions = checkpoint['multiple_low_impact_transport_options'];
 
-        // Preparing data for display or further processing
-        checkpointDetails.add({
-          'checkpoint': checkpointName,
-          'transport_options': transportOptions['low_impact_transport'],
-          'carbon_footprint': transportOptions['carbon_footprint'],
-          'estimated_price': transportOptions['estimated_price'],
-        });
+// Preparing data for display or further processing
+for (var option in transportOptions) {
+  checkpointDetails.add({
+    'checkpoint': checkpointName,
+    'transport_options': option['low_impact_transport'],
+    'carbon_footprint': option['carbon_footprint'],
+    'estimated_price': option['estimated_price'],
+  });
+}
 
         Navigator.push(
           context,
@@ -148,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     String travelDetails =
-        'Travel from $_currentCity to $_destinationCity for $_numberOfPeople people with $_luggage pieces of luggage from ${_startDate.toLocal()} to ${_endDate.toLocal()} within a budget of $_budget INR. Give different low impact transportation options to travel within all the city names aka checkpoints where the transport is changed along with its carbon footprints and price.';
+        'Travel from $_currentCity to $_destinationCity for $_numberOfPeople people with $_luggage kg of luggage from ${_startDate.toLocal()} to ${_endDate.toLocal()} within a budget of $_budget INR. Checkpoints are cities where medium of transport will be changed during the journey. We need minimum number of checkpoints while travelling. To travel to each checkpoint give maximum of possible low imapct transport options. Also give the estimated time, estimated carbon emission and estimated price for each transport option';
     chatWithGPT(travelDetails);
   }
 
@@ -248,32 +250,37 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   SizedBox(height: 20),
                   Row(
-  mainAxisAlignment: MainAxisAlignment.spaceEvenly, // This will ensure even spacing around the buttons
-  children: <Widget>[
-    Expanded( // Using Expanded to give equal space for both buttons
-      child: ElevatedButton(
-        onPressed: () => _selectStartDate(context),
-        child: Text('Select Start Date'),
-      ),
-    ),
-    SizedBox(width: 20), // Space between the two buttons
-    Expanded( // Using Expanded to give equal space for both buttons
-      child: ElevatedButton(
-        onPressed: () => _selectEndDate(context),
-        child: Text('Select End Date'),
-      ),
-    ),
-  ],
-),
-SizedBox(height: 10), // Space between the buttons and the date display
-Row(
-  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  children: <Widget>[
-    Text('Start Date: ${_startDate.toLocal()}'.split(' ')[0]),
-    Text('End Date: ${_endDate.toLocal()}'.split(' ')[0]),
-  ],
-),
-SizedBox(height: 20), 
+                    mainAxisAlignment: MainAxisAlignment
+                        .spaceEvenly, // This will ensure even spacing around the buttons
+                    children: <Widget>[
+                      Expanded(
+                        // Using Expanded to give equal space for both buttons
+                        child: ElevatedButton(
+                          onPressed: () => _selectStartDate(context),
+                          child: Text('Select Start Date'),
+                        ),
+                      ),
+                      SizedBox(width: 20), // Space between the two buttons
+                      Expanded(
+                        // Using Expanded to give equal space for both buttons
+                        child: ElevatedButton(
+                          onPressed: () => _selectEndDate(context),
+                          child: Text('Select End Date'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                      height:
+                          10), // Space between the buttons and the date display
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Text('Start Date: ${_startDate.toLocal()}'.split(' ')[0]),
+                      Text('End Date: ${_endDate.toLocal()}'.split(' ')[0]),
+                    ],
+                  ),
+                  SizedBox(height: 20),
                   Container(
                     width: textFieldWidth,
                     child: TextField(
@@ -373,7 +380,8 @@ class _DetailsPageState extends State<DetailsPage> {
                   child: Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: NetworkImage("https://images.unsplash.com/photo-1610437759118-6c9a45aab39b?q=80&w=1854&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
+                        image: NetworkImage(
+                            "https://images.unsplash.com/photo-1610437759118-6c9a45aab39b?q=80&w=1854&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -390,7 +398,8 @@ class _DetailsPageState extends State<DetailsPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 10.0),
                               child: Text(
                                 entry.key,
                                 style: TextStyle(
@@ -412,10 +421,13 @@ class _DetailsPageState extends State<DetailsPage> {
                                   });
                                 },
                                 child: Container(
-                                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: 5, horizontal: 10),
                                   padding: EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: selectedDetails.contains(detail) ? Colors.blue : Colors.white,
+                                    color: selectedDetails.contains(detail)
+                                        ? Colors.blue
+                                        : Colors.white,
                                     borderRadius: BorderRadius.circular(10),
                                     boxShadow: [
                                       BoxShadow(
@@ -427,27 +439,37 @@ class _DetailsPageState extends State<DetailsPage> {
                                     ],
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Transport Options: ${detail['transport_options']}',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: selectedDetails.contains(detail) ? Colors.white : Colors.black54,
+                                          color:
+                                              selectedDetails.contains(detail)
+                                                  ? Colors.white
+                                                  : Colors.black54,
                                         ),
                                       ),
                                       Text(
                                         'Carbon Footprint: ${detail['carbon_footprint']}',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: selectedDetails.contains(detail) ? Colors.white : Colors.black54,
+                                          color:
+                                              selectedDetails.contains(detail)
+                                                  ? Colors.white
+                                                  : Colors.black54,
                                         ),
                                       ),
                                       Text(
                                         'Estimated Price: ${detail['estimated_price']}',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: selectedDetails.contains(detail) ? Colors.white : Colors.black54,
+                                          color:
+                                              selectedDetails.contains(detail)
+                                                  ? Colors.white
+                                                  : Colors.black54,
                                         ),
                                       ),
                                     ],
@@ -479,11 +501,310 @@ class _DetailsPageState extends State<DetailsPage> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // Handle Next button press
+                    // Navigate to the eco hotel recommendation and homestay page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EcoHotelPage(),
+                      ),
+                    );
                   },
                   child: Text('Next'),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// New page for eco hotel recommendations and homestays
+// ... (previous code)
+
+class EcoHotelPage extends StatelessWidget {
+  final List<Map<String, dynamic>> ecoHotels = [
+    {
+      'name': 'Eco Village Resort',
+      'location': 'Manali, Himachal Pradesh',
+      'image':
+          'https://images.unsplash.com/photo-1608387371413-f2566ac510e0?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      'description':
+          'Nestled in the beautiful Himalayas, this eco-friendly resort offers a peaceful retreat with sustainable practices and stunning natural surroundings.',
+      'rating': 4.8,
+    },
+    {
+      'name': 'The Green Nest Homestay',
+      'location': 'Coorg, Karnataka',
+      'image':
+          'https://images.unsplash.com/photo-1566571807426-61eca847576f?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      'description':
+          'Experience the tranquility of a traditional homestay surrounded by lush coffee plantations and untouched nature in this eco-friendly abode.',
+      'rating': 4.5,
+    },
+    // Add more eco hotel and homestay data here
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Eco Hotel Recommendations'),
+        backgroundColor: Colors.green[800],
+      ),
+      body: ListView.builder(
+        itemCount: ecoHotels.length,
+        itemBuilder: (context, index) {
+          final hotel = ecoHotels[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HotelBookingPage(hotel: hotel),
+                ),
+              );
+            },
+            child: Card(
+              elevation: 4.0,
+              margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hotel['name']!,
+                    style: TextStyle(
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green[800],
+                    ),
+                  ),
+                  SizedBox(height: 8.0),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        color: Colors.green[800],
+                        size: 18.0,
+                      ),
+                      SizedBox(width: 4.0),
+                      Text(
+                        hotel['location']!,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 16.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.0),
+                  Text(
+                    hotel['description']!,
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  SizedBox(height: 12.0),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 20.0,
+                      ),
+                      SizedBox(width: 4.0),
+                      Text(
+                        '${hotel['rating']!.toStringAsFixed(1)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18.0,
+                          color: Colors.green[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: Icon(Icons.arrow_forward),
+        backgroundColor: Colors.green[800],
+      ),
+    );
+  }
+}
+
+class HotelBookingPage extends StatefulWidget {
+  final Map<String, dynamic> hotel;
+
+  HotelBookingPage({required this.hotel});
+
+  @override
+  _HotelBookingPageState createState() => _HotelBookingPageState();
+}
+
+class _HotelBookingPageState extends State<HotelBookingPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage(widget.hotel['image']),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.7),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 50,
+            left: 20,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.green[800],
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.hotel['name'],
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, color: Colors.white),
+                      SizedBox(width: 5),
+                      Text(
+                        widget.hotel['location'],
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    widget.hotel['description'],
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Eco-friendly Features',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Icon(Icons.eco, color: Colors.white),
+                              SizedBox(width: 5),
+                              Text(
+                                'Solar-powered',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Icon(Icons.recycling, color: Colors.white),
+                              SizedBox(width: 5),
+                              Text(
+                                'Recycling initiatives',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Handle booking action
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 15,
+                          ),
+                          child: Text(
+                            'Book Now',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
